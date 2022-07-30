@@ -146,9 +146,6 @@ var appTemplate = Vue.createApp({
     template: /* html */ `
 <div>
     <div>
-        <button
-            @click="doTick"
-        >doTick</button>
         <p>Stats. Entities: {{entities.length}}</p>
     </div>
     <svg 
