@@ -56,6 +56,15 @@ var appTemplate = Vue.createApp({
                     angle: 0,
                     alive: true,
                 },
+                {
+                    x: 60,
+                    y: -21,
+                    type: "dino",
+                    score: 0,
+                    speed: 0.5,
+                    angle: 0,
+                    alive: true,
+                },
             ],
         };
     },
@@ -63,8 +72,20 @@ var appTemplate = Vue.createApp({
         setInterval(this.doTick, 1000 / 60);
     },
     methods: {
+        spawnPlants: function () {
+            var plantChange = 0.01;
+            if (Math.random() <= plantChange) {
+                this.entities.push({
+                    x: (Math.random() - 0.5) * this.worldSize * 2,
+                    y: (Math.random() - 0.5) * this.worldSize * 2,
+                    type: "plant",
+                    alive: true,
+                })
+            }
+        },
         doTick: function () {
             var self = this;
+            this.spawnPlants();
             var dinos = this.entities.filter(function(entity) {
                 return entity.type === "dino";
             });
@@ -87,7 +108,6 @@ var appTemplate = Vue.createApp({
                     if (closestPlantVector.distance <= 1) {
                         currentClosestPlant.alive = false;
                         dino.score += 1;
-                        console.log("Dino Score: " + dino.score);
                     } else {
                         var dinoMovementAmount = Math.min(
                             closestPlantVector.distance,
