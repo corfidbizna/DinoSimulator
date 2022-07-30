@@ -52,12 +52,15 @@ var appTemplate = Vue.createApp({
                     y: 0,
                     type: "dino",
                     score: 0,
-                    speed: 5,
+                    speed: 0.3,
                     angle: 0,
                     alive: true,
                 },
             ],
         };
+    },
+    created: function () {
+        setInterval(this.doTick, 1000 / 60);
     },
     methods: {
         doTick: function () {
@@ -170,6 +173,9 @@ appTemplate.component('dino', {
         stroke-width="2"
         :transform="'rotate(' + convertRadianToDegree(value.angle) + ')'"
     />
+    <text
+        y="-5"
+    >score: {{value.score}}</text>
     <ellipse
         cx="0"
         cy="0"
