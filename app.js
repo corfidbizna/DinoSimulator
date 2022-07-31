@@ -74,9 +74,11 @@ var getRandomWorldPosition = function (worldSize) {
 var appTemplate = Vue.createApp({
     data: function() {
         var worldSize = 100;
+        var foodDecrementAmount = 120;
         return {
             currentTick: 0,
-            worldSize: worldSize, 
+            worldSize: worldSize,
+            foodRequiredToSpawn: 10,
             entities: [
                 {
                     x: -87,
@@ -105,6 +107,8 @@ var appTemplate = Vue.createApp({
                     speed: 0.3,
                     angle: 0,
                     visionRadius: 40,
+                    food: 9,
+                    hungerTick: foodDecrementAmount, 
                     behavior: 'roaming',
                     alive: true,
                     roamTarget: null,
@@ -118,6 +122,8 @@ var appTemplate = Vue.createApp({
                     speed: 0.5,
                     angle: 0,
                     visionRadius: 20,
+                    food: 9,
+                    hungerTick: foodDecrementAmount, 
                     behavior: 'roaming',
                     alive: true,
                     roamTarget: null,
@@ -130,7 +136,7 @@ var appTemplate = Vue.createApp({
     },
     methods: {
         spawnPlants: function () {
-            var plantChange = 0.01;
+            var plantChange = 0.1;
             if (Math.random() <= plantChange) {
                 var plantPosition = getRandomWorldPosition(this.worldSize);
                 this.entities.push({
@@ -154,17 +160,23 @@ var appTemplate = Vue.createApp({
             dinos.forEach(function(dino) {
                 var movementDestination;
                 var closestPlantTarget = lookForClosestTarget(dino, plants);
-                if (
-                    closestPlantTarget &&
-                    closestPlantTarget.vector.distance < dino.visionRadius
-                ) {
-                    dino.roamTarget = null;
-                    dino.behavior = 'foodGetting';
-                    movementDestination = closestPlantTarget.vector;
-                } else {
-                    dino.behavior = 'roaming'
+                dino.hungerTick -= 1;
+                if (dino.hungerTick <= 0) {
+                    dino.hungerTick = 1/(dino.speed * 0.03);
+                    dino.food -= 1;
                 }
-
+                if(dino.behavior !== 'spawning') {
+                    if (
+                        closestPlantTarget &&
+                        closestPlantTarget.vector.distance < dino.visionRadius
+                    ) {
+                        dino.roamTarget = null;
+                        dino.behavior = 'foodGetting';
+                        movementDestination = closestPlantTarget.vector;
+                    } else {
+                        dino.behavior = 'roaming'
+                    }    
+                }
                 var actionHandlers = {
                     'roaming': function() {
                         if (!dino.roamTarget) {
@@ -187,6 +199,10 @@ var appTemplate = Vue.createApp({
                                 if (closestPlantTarget.vector.distance <= 1) {
                                     closestPlantTarget.target.alive = false;
                                     dino.score += 1;
+                                    dino.food += 1;
+                                    if (dino.food >= (self.foodRequiredToSpawn)) {
+                                        dino.behavior = 'spawning';
+                                    }
                                 } else {
                                     moveEntityTowardDestination(
                                         dino,
@@ -196,10 +212,25 @@ var appTemplate = Vue.createApp({
                             }
                         }
                     },
+                    'spawning': function() {
+                        dino.food -= self.foodRequiredToSpawn * 0.5;
+                        dino.behavior = 'roaming';
+                        self.entities.push(Object.assign(
+                            {},
+                            dino,
+                            {
+                                visionRadius: dino.visionRadius + ((Math.random() - 0.5) * 5),
+                                speed: dino.speed + ((Math.random() - 0.5) * 0.25),
+                                score: 0,
+                                food: self.foodRequiredToSpawn * 0.5,
+                                name: dino.name + '+',
+                            }
+                        ))
+                    },
                 };
                 var action = actionHandlers[dino.behavior]
                 if (action) {
-                    action()
+                    action();
                 } else {
                     console.log('This dino is actionless!', JSON.stringify(dino))
                 }
@@ -208,6 +239,9 @@ var appTemplate = Vue.createApp({
                     Math.abs(dino.x) >= self.worldSize ||
                     Math.abs(dino.y) >= self.worldSize
                 ) {
+                    dino.alive = false;
+                }
+                if (dino.food <= 0) {
                     dino.alive = false;
                 }
             });
@@ -300,14 +334,17 @@ appTemplate.component('dino', {
             fill="#ffffff08"
         />
         <text
-            y="-2"
+            y="6"
         >dino: {{value.name}}</text>
         <text
-            y="-5"
+            y="-3"
         >score: {{value.score}}</text>
         <text
-            y="-8"
+            y="-6"
         >behavior: {{value.behavior}}</text>
+        <text
+            y="-9"
+        >food: {{value.food}}</text>
         <ellipse
             cx="0"
             cy="0"
