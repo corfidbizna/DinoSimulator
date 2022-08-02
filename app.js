@@ -23,7 +23,55 @@ var mathsMixin = {
         },
         createTranslateForTarget: function (target) {
             return 'translate(' + target.x + ',' + target.y + ')'
-        }
+        },
+        interpolate: function(a, b, percent) {
+            return Math.floor(((a - b) * percent) + b);
+        },
+        numberToHex: function(input) {
+            // Currently only works for two digits of Hex. 
+            // Meant for colors. 
+            var number = input % 256;
+            var hex = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f" ];
+            var first = Math.floor(number / 16);
+            var second = (number % 16);
+            var result = "";
+            return (result + hex[first] + hex[second]); 
+        },
+        hungerLerpResult: function(dino) {
+            // This should probably live somewhere else, but putting it here
+            // was the fastest way to get it accessible to the svg. :/
+            var cap = hungerTickCalc(dino);
+            var current = dino.hungerTick;
+            var percentRate = current / cap;
+            var percentFood = dino.food / 10;
+            var percent = percentFood + (percentRate * 0.1);
+            var colorMax = [
+                64,
+                255,
+                255,
+                4,
+            ];
+            var colorMin = [
+                255,
+                64,
+                64,
+                16,
+            ];
+            var colorCurrent = [
+                this.interpolate(colorMax[0], colorMin[0], percent),
+                this.interpolate(colorMax[1], colorMin[1], percent),
+                this.interpolate(colorMax[2], colorMin[2], percent),
+                this.interpolate(colorMax[3], colorMin[3], percent),,
+            ];
+            var result = colorCurrent.join(", ");
+            // return "rgba(" + result + ")";
+            return "#" 
+                + this.numberToHex(colorCurrent[0])
+                + this.numberToHex(colorCurrent[1])
+                + this.numberToHex(colorCurrent[2])
+                + this.numberToHex(colorCurrent[3])
+            ;
+        },
     },
 };
 
@@ -70,6 +118,10 @@ var getRandomWorldPosition = function (worldSize) {
         y: (Math.random() - 0.5) * worldSize * 2,
     }
 };
+
+var hungerTickCalc = function(dino) {
+    return 1/(dino.speed * 0.03);
+}
 
 var appTemplate = Vue.createApp({
     data: function() {
@@ -162,7 +214,7 @@ var appTemplate = Vue.createApp({
                 var closestPlantTarget = lookForClosestTarget(dino, plants);
                 dino.hungerTick -= 1;
                 if (dino.hungerTick <= 0) {
-                    dino.hungerTick = 1/(dino.speed * 0.03);
+                    dino.hungerTick = hungerTickCalc(dino);
                     dino.food -= 1;
                 }
                 if(dino.behavior !== 'spawning') {
@@ -215,6 +267,11 @@ var appTemplate = Vue.createApp({
                     'spawning': function() {
                         dino.food -= self.foodRequiredToSpawn * 0.5;
                         dino.behavior = 'roaming';
+                        var dinoName = dino.name.split(" ");
+                        var generation = 1;
+                        if (dinoName.length > 1) {
+                            var generation = parseInt(dinoName[1], 10);
+                        }
                         self.entities.push(Object.assign(
                             {},
                             dino,
@@ -223,7 +280,7 @@ var appTemplate = Vue.createApp({
                                 speed: dino.speed + ((Math.random() - 0.5) * 0.25),
                                 score: 0,
                                 food: self.foodRequiredToSpawn * 0.5,
-                                name: dino.name + '+',
+                                name: dinoName[0] + " " + (generation+1),
                             }
                         ))
                     },
@@ -331,7 +388,7 @@ appTemplate.component('dino', {
             cy="0"
             :rx="value.visionRadius"
             :ry="value.visionRadius"
-            fill="#ffffff08"
+            :fill="hungerLerpResult(value)"
         />
         <text
             y="6"
@@ -351,6 +408,13 @@ appTemplate.component('dino', {
             rx="1"
             ry="1"
         />
+        <polyline 
+            v-if="value.roamTarget"
+            :points="'0,0 ' + (value.roamTarget.x - value.x) + ',' + (value.roamTarget.y - value.y)"
+            stroke="#ff08"
+            stroke-width="0.1"
+            stroke-linecap="round"
+        />
     </g>
     <g
         class="outside"
@@ -360,9 +424,6 @@ appTemplate.component('dino', {
             class="roam-target"
             :transform="createTranslateForTarget(value.roamTarget)"
         >
-            <text
-                y="-2"
-            >dino: {{value.name}}</text>
             <ellipse
                 cx="0"
                 cy="0"
