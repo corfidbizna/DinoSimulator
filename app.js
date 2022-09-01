@@ -56,15 +56,19 @@ var appTemplate = Vue.createApp({
                     roamTarget: null,
                 },
             ],
+            timerId: null
         };
     },
     created: function () {
-        setInterval(this.doTick, 1000 / 60);
+        this.timerId = setInterval(this.doTick, 1000 / 60);
     },
     methods: {
         doTick: function () {
             this.currentTick += 1;
             tickEntitySystem(this);
+            if (this.isGameOver) {
+                clearInterval(this.timerId);
+            }
         }
     },
     computed: {
@@ -75,12 +79,31 @@ var appTemplate = Vue.createApp({
                 this.worldSize * 2,
                 this.worldSize * 2,
             ].join(' ');
+        },
+        dinos: function () {
+            return this.entities.filter(function(entity) {
+                return entity.type === "dino";
+            })
+        },
+        plants: function () {
+            return this.entities.filter(function(entity) {
+                return entity.type === "plant";
+            })
+        },
+        isGameOver: function () {
+            return this.dinos.length === 0;
         }
     },
     template: /* html */ `
 <div>
     <div>
-        <p>Stats. current tick: {{currentTick}} Entities: {{entities.length}}</p>
+        <p>
+            <span>Stats: </span>
+            <span>Current tick: {{currentTick}}; </span>
+            <span>Entities: {{entities.length}}; </span>
+            <span>Dinos: {{dinos.length}}; </span>
+            <span>Plants: {{plants.length}}; </span>
+        </p>
     </div>
     <svg 
         :viewBox="viewBox"
@@ -89,6 +112,10 @@ var appTemplate = Vue.createApp({
             border: 2px solid #555;
         "
     >
+        <text
+            v-if="isGameOver"
+            class="game-over"
+        >EXTINCTION OF DINOS</text>
         <component
             v-for="item in entities"
             :is="item.type"
