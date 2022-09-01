@@ -1,3 +1,22 @@
+var mathsMixin = {
+    computed: {
+        tau: function () {
+            return maths.tau;
+        },
+    },
+    methods: {
+        convertRadianToDegree: function (radian) {
+            return (radian / maths.tau) * 360;
+        },
+        createTranslateForTarget: function (target) {
+            return 'translate(' + target.x + ',' + target.y + ')'
+        },
+        interpolate: function(a, b, progress) {
+            return Math.floor(((a - b) * progress) + b);
+        },
+    },
+};
+
 var appTemplate = Vue.createApp({
     data: function() {
         var worldSize = 100;
@@ -56,20 +75,12 @@ var appTemplate = Vue.createApp({
                     roamTarget: null,
                 },
             ],
-            timerId: null
+            timerId: null,
+            timeSeriesData: [],
         };
     },
     created: function () {
         this.timerId = setInterval(this.doTick, 1000 / 60);
-    },
-    methods: {
-        doTick: function () {
-            this.currentTick += 1;
-            tickEntitySystem(this);
-            if (this.isGameOver) {
-                clearInterval(this.timerId);
-            }
-        }
     },
     computed: {
         viewBox: function () {
@@ -90,9 +101,45 @@ var appTemplate = Vue.createApp({
                 return entity.type === "plant";
             })
         },
+        dinoCount: function () {
+            return this.dinos.length;
+        },
+        plantCount: function () {
+            return this.plants.length;
+        },
         isGameOver: function () {
             return this.dinos.length === 0;
-        }
+        },
+    },
+    methods: {
+        doTick: function () {
+            this.currentTick += 1;
+            tickEntitySystem(this);
+            if (this.isGameOver) {
+                clearInterval(this.timerId);
+            }
+        },
+        addDataPoint: function (key, value) {
+            this.timeSeriesData.push({
+                key: key,
+                value: value,
+                tick: this.currentTick
+            });
+        },
+    },
+    watch: {
+        plantCount: {
+            handler: function (newValue) {
+                this.addDataPoint('plant', newValue);
+            },
+            immediate: true
+        },
+        dinoCount: {
+            handler: function (newValue) {
+                this.addDataPoint('dino', newValue);
+            },
+            immediate: true
+        },
     },
     template: /* html */ `
 <div>
@@ -101,8 +148,8 @@ var appTemplate = Vue.createApp({
             <span>Stats: </span>
             <span>Current tick: {{currentTick}}; </span>
             <span>Entities: {{entities.length}}; </span>
-            <span>Dinos: {{dinos.length}}; </span>
-            <span>Plants: {{plants.length}}; </span>
+            <span>Dinos: {{dinoCount}}; </span>
+            <span>Plants: {{plantCount}}; </span>
         </p>
     </div>
     <svg 
@@ -122,6 +169,9 @@ var appTemplate = Vue.createApp({
             :value="item"
         ></component>
     </svg>
+    <graph-multi-keys-over-time
+        :time-series-data="timeSeriesData"
+    ></graph-multi-keys-over-time>
 </div>
     `,
 });
@@ -136,6 +186,53 @@ appTemplate.component('dino', {
             type: Object,
             required: true
         }
+    },
+    methods: {
+        numberToHex: function(input) {
+            // Currently only works for two digits of Hex. 
+            // Meant for colors. 
+            var number = input % 256;
+            var hex = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f" ];
+            var first = Math.floor(number / 16);
+            var second = (number % 16);
+            var result = "";
+            return (result + hex[first] + hex[second]); 
+        },
+        hungerLerpResult: function(dino) {
+            // This should probably live somewhere else, but putting it here
+            // was the fastest way to get it accessible to the svg. :/
+            var cap = hungerTickCalc(dino);
+            var current = dino.hungerTick;
+            var percentRate = current / cap;
+            var percentFood = dino.food / 10;
+            var percent = percentFood + (percentRate * 0.1);
+            var colorMax = [
+                64,
+                255,
+                255,
+                4,
+            ];
+            var colorMin = [
+                255,
+                64,
+                64,
+                16,
+            ];
+            var colorCurrent = [
+                this.interpolate(colorMax[0], colorMin[0], percent),
+                this.interpolate(colorMax[1], colorMin[1], percent),
+                this.interpolate(colorMax[2], colorMin[2], percent),
+                this.interpolate(colorMax[3], colorMin[3], percent),,
+            ];
+            var result = colorCurrent.join(", ");
+            // return "rgba(" + result + ")";
+            return "#" 
+                + this.numberToHex(colorCurrent[0])
+                + this.numberToHex(colorCurrent[1])
+                + this.numberToHex(colorCurrent[2])
+                + this.numberToHex(colorCurrent[3])
+            ;
+        },
     },
     template: /* svg */ `
 <g

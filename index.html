@@ -12,17 +12,35 @@
             color: #ddd;
             font-family: monospace;
         }
+        pre {
+            text-align: left;
+        }
         svg .dino {
             fill: #3a6499aa;
         }
         svg .plant {
             fill: #48A229aa;
         }
+        svg .stroke {
+            stroke-width: 1;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+        svg .dino-stroke {
+            stroke: #3a6499aa;
+        }
+        svg .plant-stroke {
+            stroke: #48A229aa;
+        }
         svg text {
             font-family: monospace;
             font-size: 3px;
             fill: #fff;
             text-anchor: middle;
+        }
+        svg text.legend {
+            text-anchor: start;
         }
         svg text.game-over {
             font-family: monospace;
@@ -39,5 +57,6 @@
     <script src="./vue.global.js"></script>
     <script src="./entityBehaviorSystem.js"></script>
     <script src="./app.js"></script>
+    <script src="./componentGraphMultiKeysOverTime.js"></script>
 </body>
 </html>
