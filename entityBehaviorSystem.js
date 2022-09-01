@@ -140,6 +140,7 @@ var spawnPlants = function (worldSize) {
 
 var tickEntitySystem = function (state) {
     var worldSize = state.worldSize;
+    var newDinos = [];
     var newPlants = spawnPlants(worldSize);
     state.entities = state.entities.concat(newPlants);
     var dinos = state.entities.filter(function(entity) {
@@ -211,7 +212,7 @@ var tickEntitySystem = function (state) {
                 if (dinoName.length > 1) {
                     var generation = parseInt(dinoName[1], 10);
                 }
-                state.entities.push(Object.assign(
+                newDinos.push(Object.assign(
                     {},
                     dino,
                     {
@@ -241,7 +242,9 @@ var tickEntitySystem = function (state) {
             dino.alive = false;
         }
     });
-    state.entities = state.entities.filter(function(entity) {
-        return entity.alive;
-    });
+    state.entities = state.entities
+        .filter(function(entity) {
+            return entity.alive;
+        })
+        .concat(newDinos);
 }
