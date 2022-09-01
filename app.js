@@ -195,14 +195,7 @@ appTemplate.component('dino', {
     },
     methods: {
         numberToHex: function(input) {
-            // Currently only works for two digits of Hex. 
-            // Meant for colors. 
-            var number = input % 256;
-            var hex = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f" ];
-            var first = Math.floor(number / 16);
-            var second = (number % 16);
-            var result = "";
-            return (result + hex[first] + hex[second]); 
+            return input.toString(16).padStart(2, '0');
         },
         hungerLerpResult: function(dino) {
             // This should probably live somewhere else, but putting it here
@@ -211,7 +204,7 @@ appTemplate.component('dino', {
             var current = dino.hungerTick;
             var percentRate = current / cap;
             var percentFood = dino.food / 10;
-            var percent = percentFood + (percentRate * 0.1);
+            var fraction = percentFood + (percentRate * 0.1);
             var colorMax = [
                 64,
                 255,
@@ -225,10 +218,10 @@ appTemplate.component('dino', {
                 16,
             ];
             var colorCurrent = [
-                Math.floor(this.interpolate(colorMax[0], colorMin[0], percent)),
-                Math.floor(this.interpolate(colorMax[1], colorMin[1], percent)),
-                Math.floor(this.interpolate(colorMax[2], colorMin[2], percent)),
-                Math.floor(this.interpolate(colorMax[3], colorMin[3], percent)),
+                Math.floor(this.interpolate(colorMax[0], colorMin[0], Math.min(1, fraction))),
+                Math.floor(this.interpolate(colorMax[1], colorMin[1], Math.min(1, fraction))),
+                Math.floor(this.interpolate(colorMax[2], colorMin[2], Math.min(1, fraction))),
+                Math.floor(this.interpolate(colorMax[3], colorMin[3], Math.min(1, fraction))),
             ];
             var result = colorCurrent.join(", ");
             // return "rgba(" + result + ")";

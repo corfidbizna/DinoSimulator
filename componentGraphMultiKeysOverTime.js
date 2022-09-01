@@ -115,7 +115,7 @@ appTemplate.component('graph-multi-keys-over-time', {
                 :y="-height + padding + (padding * lineIndex)"
                 class="legend"
                 :class="key"
-            >{{ key }}</text>
+            >{{ key }}: {{ line.length }}</text>
             <rect
                 :x="padding / 2"
                 :y="-height + (padding / 1.5) + (padding * lineIndex)"
