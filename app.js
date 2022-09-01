@@ -12,7 +12,12 @@ var mathsMixin = {
             return 'translate(' + target.x + ',' + target.y + ')'
         },
         interpolate: function(a, b, progress) {
-            return Math.floor(((a - b) * progress) + b);
+            return ((a - b) * progress) + b;
+        },
+        getProgressInRange: function(min, max, progress) {
+            var range = max - min;
+            var offsetValue = progress - min;
+            return offsetValue / range;
         },
     },
 };
@@ -125,6 +130,7 @@ var appTemplate = Vue.createApp({
                 value: value,
                 tick: this.currentTick
             });
+            this.timeSeriesData = this.timeSeriesData.slice(-600);
         },
     },
     watch: {
@@ -219,10 +225,10 @@ appTemplate.component('dino', {
                 16,
             ];
             var colorCurrent = [
-                this.interpolate(colorMax[0], colorMin[0], percent),
-                this.interpolate(colorMax[1], colorMin[1], percent),
-                this.interpolate(colorMax[2], colorMin[2], percent),
-                this.interpolate(colorMax[3], colorMin[3], percent),,
+                Math.floor(this.interpolate(colorMax[0], colorMin[0], percent)),
+                Math.floor(this.interpolate(colorMax[1], colorMin[1], percent)),
+                Math.floor(this.interpolate(colorMax[2], colorMin[2], percent)),
+                Math.floor(this.interpolate(colorMax[3], colorMin[3], percent)),
             ];
             var result = colorCurrent.join(", ");
             // return "rgba(" + result + ")";

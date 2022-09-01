@@ -26,15 +26,19 @@ appTemplate.component('graph-multi-keys-over-time', {
             ].join(' ');
         },
         bounds: function () {
-            var max = {
-                value: 0,
-                tick: 0, 
+            var result = {
+                valueMin: Infinity,
+                valueMax: -Infinity,
+                tickMin: Infinity,
+                tickMax: -Infinity,
             };
             this.timeSeriesData.forEach(function (point) {
-                max.value = Math.max(max.value, point.value);
-                max.tick = Math.max(max.tick, point.tick);
+                result.valueMin = Math.min(result.valueMin, point.value);
+                result.valueMax = Math.max(result.valueMax, point.value);
+                result.tickMin = Math.min(result.tickMin, point.tick);
+                result.tickMax = Math.max(result.tickMax, point.tick);
             });
-            return max;
+            return result;
         },
         lines: function () {
             var bounds = this.bounds;
@@ -75,8 +79,8 @@ appTemplate.component('graph-multi-keys-over-time', {
     },
     methods: {
         getPositionAndTranslateForPoint: function (point, bounds) {
-            var xProgress = point.tick / bounds.tick;
-            var yProgress = point.value / bounds.value;
+            var xProgress = this.getProgressInRange(bounds.tickMin, bounds.tickMax, point.tick);
+            var yProgress = this.getProgressInRange(bounds.valueMin, bounds.valueMax, point.value);
             var padding = this.padding;
             var position = {
                 x: (xProgress * this.innerWidth) + padding,
