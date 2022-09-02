@@ -123,7 +123,7 @@ var tickEntitySystem = function (state) {
             'foodGetting': function() {
                 if (plants.length) {
                     // move to eat plant?
-                    if(closestPlantTarget) {
+                    if(closestPlantTarget.target.alive) {
                         if (closestPlantTarget.vector.distance <= 1) {
                             closestPlantTarget.target.alive = false;
                             dino.score += 1;
@@ -153,7 +153,7 @@ var tickEntitySystem = function (state) {
                     dino,
                     {
                         visionRadius: dino.visionRadius + ((Math.random() - 0.5) * 5),
-                        speed: Math.max(0.1, dino.speed + ((Math.random() - 0.5) * 0.25)),
+                        speed: Math.max(0.001, dino.speed + ((Math.random() - 0.5) * 0.25)),
                         score: 0,
                         food: state.foodRequiredToSpawn * 0.5,
                         name: dinoName[0] + " " + (generation+1),
