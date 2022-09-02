@@ -130,7 +130,7 @@ var appTemplate = Vue.createApp({
                 value: value,
                 tick: this.currentTick
             });
-            this.timeSeriesData = this.timeSeriesData.slice(-600);
+            this.timeSeriesData = this.timeSeriesData.slice(-6000);
         },
     },
     watch: {

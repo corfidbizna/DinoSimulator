@@ -128,6 +128,11 @@ appTemplate.component('graph-multi-keys-over-time', {
                 class="stroke"
                 :class="key + '-stroke'"
             />
+    </svg>
+</div>
+    `
+    /*
+    I removed this from the end of the above multi-line String to try and improve performance. 
             <g
                 class="points"
                 :class="key"
@@ -147,7 +152,5 @@ appTemplate.component('graph-multi-keys-over-time', {
             :x="width / 2"
             :y="-height / 2"
         >Data points: {{ timeSeriesData.length }}</text>
-    </svg>
-</div>
-    `
+    */
 })
